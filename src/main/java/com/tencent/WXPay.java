@@ -3,6 +3,7 @@ package com.tencent;
 import com.tencent.business.DownloadBillBusiness;
 import com.tencent.business.RefundBusiness;
 import com.tencent.business.RefundQueryBusiness;
+import com.tencent.business.ReverseBusiness;
 import com.tencent.business.ScanPayBusiness;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
 import com.tencent.protocol.pay_protocol.ScanPayReqData;
@@ -139,6 +140,16 @@ public class WXPay {
      */
     public static void doDownloadBillBusiness(DownloadBillReqData downloadBillReqData,DownloadBillBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
         new DownloadBillBusiness(certLocalPath,certPassword,keyPartner).run(downloadBillReqData,resultListener,certLocalPath,certPassword);
+    }
+    
+    /**
+     * 直接执行被撤销订单
+     * @param scanPayReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @throws Exception
+     */
+    public static void doReverseBusiness(ReverseReqData reverseReqData, ReverseBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new ReverseBusiness(certLocalPath,certPassword,keyPartner).run(reverseReqData, resultListener,certLocalPath,certPassword);
     }
 
 
