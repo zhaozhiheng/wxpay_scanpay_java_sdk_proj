@@ -87,6 +87,8 @@ public class ScanPayBusiness {
     private ReverseService reverseService;
 
     private String transactionID = "";
+    
+    private boolean doReportFlag = false;
 
     /**
      * 直接执行被扫支付业务逻辑（包含最佳实践流程）
@@ -122,30 +124,36 @@ public class ScanPayBusiness {
         //将从API返回的XML数据映射到Java对象
         ScanPayResData scanPayResData = (ScanPayResData) Util.getObjectFromXML(payServiceResponseString, ScanPayResData.class);
 
-        //异步发送统计请求
-        //*
-
-        ReportReqData reportReqData = new ReportReqData(
-                scanPayReqData.getDevice_info(),
-                Configure.PAY_API,
-                (int) (totalTimeCost),//本次请求耗时
-                scanPayResData.getReturn_code(),
-                scanPayResData.getReturn_msg(),
-                scanPayResData.getResult_code(),
-                scanPayResData.getErr_code(),
-                scanPayResData.getErr_code_des(),
-                scanPayResData.getOut_trade_no(),
-                scanPayReqData.getSpbill_create_ip()
-        );
-        long timeAfterReport;
-        if (Configure.isUseThreadToDoReport()) {
-            ReporterFactory.getReporter(reportReqData).run();
-            timeAfterReport = System.currentTimeMillis();
-            log.i("pay+report总耗时（异步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
-        } else {
-            ReportService.request(reportReqData);
-            timeAfterReport = System.currentTimeMillis();
-            log.i("pay+report总耗时（同步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        // 交易失败 商户系统订单手动回显
+        if (null != scanPayResData && (null == scanPayResData.getOut_trade_no() || "" .equals(scanPayResData.getOut_trade_no()))) {
+        	scanPayResData.setOut_trade_no(outTradeNo);
+        }
+        // 是否上报统计
+        if (doReportFlag) {
+        	//异步发送统计请求
+        	//*
+        	ReportReqData reportReqData = new ReportReqData(
+        			scanPayReqData.getDevice_info(),
+        			Configure.PAY_API,
+        			(int) (totalTimeCost),//本次请求耗时
+        			scanPayResData.getReturn_code(),
+        			scanPayResData.getReturn_msg(),
+        			scanPayResData.getResult_code(),
+        			scanPayResData.getErr_code(),
+        			scanPayResData.getErr_code_des(),
+        			scanPayResData.getOut_trade_no(),
+        			scanPayReqData.getSpbill_create_ip()
+        			);
+        	long timeAfterReport;
+        	if (Configure.isUseThreadToDoReport()) {
+        		ReporterFactory.getReporter(reportReqData).run();
+        		timeAfterReport = System.currentTimeMillis();
+        		log.i("pay+report总耗时（异步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        	} else {
+        		ReportService.request(reportReqData);
+        		timeAfterReport = System.currentTimeMillis();
+        		log.i("pay+report总耗时（同步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        	}
         }
 
         if (scanPayResData == null || scanPayResData.getReturn_code() == null) {

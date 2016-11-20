@@ -18,6 +18,7 @@ public class RefundReqData {
     //每个字段具体的意思请查看API文档
     private String appid = "";
     private String mch_id = "";
+    private String sub_mch_id = "";
     private String device_info = "";
     private String nonce_str = "";
     private String sign = "";
@@ -50,6 +51,9 @@ public class RefundReqData {
 
         //微信支付分配的商户号ID（开通公众号的微信支付功能之后可以获取到）
         setMch_id(Configure.getMchid());
+        
+        //微信支付分配的子商户号ID（服务商添加特约商户之后可以获取到）
+        setSub_mch_id(Configure.getSubMchid());
 
         //transaction_id是微信系统为每一笔支付交易分配的订单号，通过这个订单号可以标识这笔交易，它由支付订单API支付成功时返回的数据里面获取到。
         setTransaction_id(transactionID);
@@ -93,7 +97,15 @@ public class RefundReqData {
         this.mch_id = mch_id;
     }
 
-    public String getDevice_info() {
+    public String getSub_mch_id() {
+		return sub_mch_id;
+	}
+
+	public void setSub_mch_id(String sub_mch_id) {
+		this.sub_mch_id = sub_mch_id;
+	}
+
+	public String getDevice_info() {
         return device_info;
     }
 
