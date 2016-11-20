@@ -20,6 +20,12 @@ import org.slf4j.LoggerFactory;
 
 import static java.lang.Thread.sleep;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 /**
  * User: rizenguo
  * Date: 2014/12/1
@@ -27,10 +33,17 @@ import static java.lang.Thread.sleep;
  */
 public class ScanPayBusiness {
 
-    public ScanPayBusiness() throws IllegalAccessException, ClassNotFoundException, InstantiationException {
-        scanPayService = new ScanPayService();
-        scanPayQueryService = new ScanPayQueryService();
-        reverseService = new ReverseService();
+//    public ScanPayBusiness() throws IllegalAccessException, ClassNotFoundException, InstantiationException {
+//        scanPayService = new ScanPayService();
+//        scanPayQueryService = new ScanPayQueryService();
+//        reverseService = new ReverseService();
+//    }
+    
+    public ScanPayBusiness(String certLocalPath,String certPassword,String keyPartner) throws IllegalAccessException, ClassNotFoundException, InstantiationException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+    	key = keyPartner;
+    	scanPayService = new ScanPayService(certLocalPath,certPassword);
+        scanPayQueryService = new ScanPayQueryService(certLocalPath,certPassword);
+        reverseService = new ReverseService(certLocalPath,certPassword);
     }
 
     public interface ResultListener {
@@ -87,6 +100,8 @@ public class ScanPayBusiness {
     private ReverseService reverseService;
 
     private String transactionID = "";
+    
+    private String key = null;
 
     /**
      * 直接执行被扫支付业务逻辑（包含最佳实践流程）
@@ -95,14 +110,18 @@ public class ScanPayBusiness {
      * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws Exception
      */
-    public void run(ScanPayReqData scanPayReqData, ResultListener resultListener) throws Exception {
+    public void run(ScanPayReqData scanPayReqData, ResultListener resultListener,String certLocalPath,String certPassword) throws Exception {
 
         //--------------------------------------------------------------------
         //构造请求“被扫支付API”所需要提交的数据
         //--------------------------------------------------------------------
 
         String outTradeNo = scanPayReqData.getOut_trade_no();
-
+        String appId = scanPayReqData.getAppid();  
+        String mchId = scanPayReqData.getMch_id();
+        String subMchId = scanPayReqData.getSub_mch_id();
+        String spBillCreateIp = scanPayReqData.getSpbill_create_ip();
+        String deviceInfo = scanPayReqData.getDevice_info();
         //接受API返回
         String payServiceResponseString;
 
@@ -121,33 +140,12 @@ public class ScanPayBusiness {
 
         //将从API返回的XML数据映射到Java对象
         ScanPayResData scanPayResData = (ScanPayResData) Util.getObjectFromXML(payServiceResponseString, ScanPayResData.class);
-
-        //异步发送统计请求
-        //*
-
-        ReportReqData reportReqData = new ReportReqData(
-                scanPayReqData.getDevice_info(),
-                Configure.PAY_API,
-                (int) (totalTimeCost),//本次请求耗时
-                scanPayResData.getReturn_code(),
-                scanPayResData.getReturn_msg(),
-                scanPayResData.getResult_code(),
-                scanPayResData.getErr_code(),
-                scanPayResData.getErr_code_des(),
-                scanPayResData.getOut_trade_no(),
-                scanPayReqData.getSpbill_create_ip()
-        );
-        long timeAfterReport;
-        if (Configure.isUseThreadToDoReport()) {
-            ReporterFactory.getReporter(reportReqData).run();
-            timeAfterReport = System.currentTimeMillis();
-            log.i("pay+report总耗时（异步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
-        } else {
-            ReportService.request(reportReqData);
-            timeAfterReport = System.currentTimeMillis();
-            log.i("pay+report总耗时（同步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        
+        //上报腾讯API效率
+        if(Configure.isReportFlag() ){
+        	this.report(scanPayResData,totalTimeCost,spBillCreateIp,deviceInfo,costTimeStart,appId,mchId,subMchId,certLocalPath,certPassword);
         }
-
+ 
         if (scanPayResData == null || scanPayResData.getReturn_code() == null) {
             log.e("【支付失败】支付请求逻辑错误，请仔细检测传过去的每一个参数是否合法，或是看API能否被正常访问");
             resultListener.onFailByReturnCodeError(scanPayResData);
@@ -164,7 +162,7 @@ public class ScanPayBusiness {
             //--------------------------------------------------------------------
             //收到API的返回数据的时候得先验证一下数据有没有被第三方篡改，确保安全
             //--------------------------------------------------------------------
-            if (!Signature.checkIsSignValidFromResponseString(payServiceResponseString)) {
+            if (!Signature.checkIsSignValidFromResponseString(payServiceResponseString,key)) {
                 log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
                 resultListener.onFailBySignInvalid(scanPayResData);
                 return;
@@ -204,7 +202,7 @@ public class ScanPayBusiness {
                     //--------------------------------------------------------------------
 
                     //对于扣款明确失败的情况直接走撤销逻辑
-                    doReverseLoop(outTradeNo,resultListener);
+                    doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
 
                     //以下几种情况建议明确提示用户，指导接下来的工作
                     if (errorCode.equals("AUTHCODEEXPIRE")) {
@@ -227,12 +225,12 @@ public class ScanPayBusiness {
                     //--------------------------------------------------------------------
 
                     //表示有可能单次消费超过300元，或是免输密码消费次数已经超过当天的最大限制，这个时候提示用户输入密码，商户自己隔一段时间去查单，查询一定次数，看用户是否已经输入了密码
-                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener)) {
+                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener,appId,mchId,subMchId)) {
                         log.i("【需要用户输入密码、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
                         log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo,resultListener);
+                        doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
                         resultListener.onFail(scanPayResData);
                     }
                 } else {
@@ -241,12 +239,12 @@ public class ScanPayBusiness {
                     //4)扣款未知失败
                     //--------------------------------------------------------------------
 
-                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener)) {
+                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener,appId,mchId,subMchId)) {
                         log.i("【支付扣款未知失败、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
                         log.i("【支付扣款未知失败、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo,resultListener);
+                        doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
                         resultListener.onFail(scanPayResData);
                     }
                 }
@@ -254,7 +252,43 @@ public class ScanPayBusiness {
         }
     }
 
-    /**
+    //上报刷卡支付接口的效率数据至腾讯
+    private void report(ScanPayResData scanPayResData, long totalTimeCost, String spBillCreateIp,String deviceInfo,long costTimeStart,String appId,String mchId,String subMchId,String certLocalPath,String certPassword) throws Exception {
+		// TODO Auto-generated method stub
+        //异步发送统计请求
+        //*        
+
+        ReportReqData reportReqData = new ReportReqData(
+        		deviceInfo,
+                Configure.PAY_API,
+                (int) (totalTimeCost),//本次请求耗时
+                scanPayResData.getReturn_code(),
+                scanPayResData.getReturn_msg(),
+                scanPayResData.getResult_code(),
+                scanPayResData.getErr_code(),
+                scanPayResData.getErr_code_des(),
+                scanPayResData.getOut_trade_no(),
+                spBillCreateIp,
+                this.key,
+                appId,
+                mchId,
+                subMchId
+        );
+        long timeAfterReport;
+        if (Configure.isUseThreadToDoReport()) {
+            ReporterFactory.getReporter(reportReqData,certLocalPath,certPassword).run();
+            timeAfterReport = System.currentTimeMillis();
+            log.i("pay+report总耗时（异步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        } else {
+            ReportService.request(reportReqData,certLocalPath,certPassword);
+            timeAfterReport = System.currentTimeMillis();
+            log.i("pay+report总耗时（同步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        }
+
+		
+	}
+
+	/**
      * 进行一次支付订单查询操作
      *
      * @param outTradeNo    商户系统内部的订单号,32个字符内可包含字母, [确保在商户系统唯一]
@@ -262,13 +296,13 @@ public class ScanPayBusiness {
      * @return 该订单是否支付成功
      * @throws Exception
      */
-    private boolean doOnePayQuery(String outTradeNo,ResultListener resultListener) throws Exception {
+    private boolean doOnePayQuery(String outTradeNo,ResultListener resultListener,String appId,String mchId,String subMchId) throws Exception {
 
         sleep(waitingTimeBeforePayQueryServiceInvoked);//等待一定时间再进行查询，避免状态还没来得及被更新
 
         String payQueryServiceResponseString;
-
-        ScanPayQueryReqData scanPayQueryReqData = new ScanPayQueryReqData("",outTradeNo);
+//        String transactionID, String outTradeNo,String keyPartner,String appId,String mchId,String subMchId
+        ScanPayQueryReqData scanPayQueryReqData = new ScanPayQueryReqData("",outTradeNo,this.key,appId,mchId,subMchId);
         payQueryServiceResponseString = scanPayQueryService.request(scanPayQueryReqData);
 
         log.i("支付订单查询API返回的数据如下：");
@@ -287,7 +321,7 @@ public class ScanPayBusiness {
             return false;
         } else {
 
-            if (!Signature.checkIsSignValidFromResponseString(payQueryServiceResponseString)) {
+            if (!Signature.checkIsSignValidFromResponseString(payQueryServiceResponseString,key)) {
                 log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
                 resultListener.onFailByQuerySignInvalid(scanPayQueryResData);
                 return false;
@@ -324,14 +358,14 @@ public class ScanPayBusiness {
      * @return 该订单是否支付成功
      * @throws InterruptedException
      */
-    private boolean doPayQueryLoop(int loopCount, String outTradeNo,ResultListener resultListener) throws Exception {
+    private boolean doPayQueryLoop(int loopCount, String outTradeNo,ResultListener resultListener,String appId,String mchId,String subMchId) throws Exception {
         //至少查询一次
         if (loopCount == 0) {
             loopCount = 1;
         }
         //进行循环查询
         for (int i = 0; i < loopCount; i++) {
-            if (doOnePayQuery(outTradeNo,resultListener)) {
+            if (doOnePayQuery(outTradeNo,resultListener,appId,mchId,subMchId)) {
                 return true;
             }
         }
@@ -349,13 +383,13 @@ public class ScanPayBusiness {
      * @return 该订单是否支付成功
      * @throws Exception
      */
-    private boolean doOneReverse(String outTradeNo,ResultListener resultListener) throws Exception {
+    private boolean doOneReverse(String outTradeNo,ResultListener resultListener,String appId,String mchId,String subMchId) throws Exception {
 
         sleep(waitingTimeBeforeReverseServiceInvoked);//等待一定时间再进行查询，避免状态还没来得及被更新
 
         String reverseResponseString;
 
-        ReverseReqData reverseReqData = new ReverseReqData("",outTradeNo);
+        ReverseReqData reverseReqData = new ReverseReqData("",outTradeNo,this.key,appId,mchId,subMchId);
         reverseResponseString = reverseService.request(reverseReqData);
 
         log.i("撤销API返回的数据如下：");
@@ -372,7 +406,7 @@ public class ScanPayBusiness {
             return false;
         } else {
 
-            if (!Signature.checkIsSignValidFromResponseString(reverseResponseString)) {
+            if (!Signature.checkIsSignValidFromResponseString(reverseResponseString,key)) {
                 log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
                 resultListener.onFailByReverseSignInvalid(reverseResData);
                 needRecallReverse = false;//数据被窜改了，不需要再重试
@@ -407,12 +441,12 @@ public class ScanPayBusiness {
      * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws InterruptedException
      */
-    private void doReverseLoop(String outTradeNo,ResultListener resultListener) throws Exception {
+    private void doReverseLoop(String outTradeNo,ResultListener resultListener,String appId,String mchId,String subMchId) throws Exception {
         //初始化这个标记
         needRecallReverse = true;
         //进行循环撤销，直到撤销成功，或是API返回recall字段为"Y"
         while (needRecallReverse) {
-            if (doOneReverse(outTradeNo,resultListener)) {
+            if (doOneReverse(outTradeNo,resultListener,appId,mchId,subMchId)) {
                 return;
             }
         }

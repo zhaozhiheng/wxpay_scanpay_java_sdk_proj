@@ -1,5 +1,11 @@
 package com.tencent.service;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 import com.tencent.common.Configure;
 import com.tencent.common.HttpsRequest;
 import com.tencent.common.RandomStringGenerator;
@@ -13,8 +19,8 @@ import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
  */
 public class DownloadBillService extends BaseService{
 
-    public DownloadBillService() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        super(Configure.DOWNLOAD_BILL_API);
+    public DownloadBillService(String certLocalPath,String certPassword) throws IllegalAccessException, InstantiationException, ClassNotFoundException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        super(Configure.DOWNLOAD_BILL_API,certLocalPath,certPassword);
     }
 
     //ALL，返回当日所有订单信息，默认值

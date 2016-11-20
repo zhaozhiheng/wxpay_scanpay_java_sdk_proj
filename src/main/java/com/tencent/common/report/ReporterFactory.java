@@ -14,8 +14,8 @@ public class ReporterFactory {
      * @param reportReqData 这个数据对象里面包含了API要求提交的各种数据字段
      * @return 返回一个Reporter
      */
-    public static Reporter getReporter(ReportReqData reportReqData){
-        return new Reporter(reportReqData);
+    public static Reporter getReporter(ReportReqData reportReqData,String certLocalPath,String certPassword){
+        return new Reporter(reportReqData,certLocalPath,certPassword);
     }
 
 }

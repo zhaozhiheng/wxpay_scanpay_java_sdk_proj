@@ -1,12 +1,13 @@
 package com.tencent.service;
 
-import com.tencent.common.Configure;
-
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+
+import com.tencent.common.Configure;
+import com.tencent.common.HttpsRequest;
 
 /**
  * User: rizenguo
@@ -22,10 +23,9 @@ public class BaseService{
     //发请求的HTTPS请求器
     private IServiceRequest serviceRequest;
 
-    public BaseService(String api) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+    public BaseService(String api,String certLocalPath,String certPassword) throws ClassNotFoundException, IllegalAccessException, InstantiationException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
         apiURL = api;
-        Class c = Class.forName(Configure.HttpsRequestClassName);
-        serviceRequest = (IServiceRequest) c.newInstance();
+        serviceRequest =  new HttpsRequest(certLocalPath,certPassword);
     }
 
     protected String sendPost(Object xmlObj) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {

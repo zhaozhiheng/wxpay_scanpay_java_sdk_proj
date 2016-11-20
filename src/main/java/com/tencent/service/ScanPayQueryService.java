@@ -1,5 +1,11 @@
 package com.tencent.service;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 import com.tencent.common.Configure;
 import com.tencent.common.HttpsRequest;
 import com.tencent.common.RandomStringGenerator;
@@ -14,8 +20,8 @@ import com.tencent.protocol.pay_query_protocol.ScanPayQueryReqData;
  */
 public class ScanPayQueryService extends BaseService{
 
-    public ScanPayQueryService() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        super(Configure.PAY_QUERY_API);
+    public ScanPayQueryService(String certLocalPath,String certPassword) throws IllegalAccessException, InstantiationException, ClassNotFoundException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        super(Configure.PAY_QUERY_API,certLocalPath,certPassword);
     }
 
     /**

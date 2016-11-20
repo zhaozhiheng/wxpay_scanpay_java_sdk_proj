@@ -10,7 +10,17 @@ import com.tencent.common.report.service.ReportService;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillResData;
 import com.tencent.service.DownloadBillService;
+import com.tencent.service.ReverseService;
+import com.tencent.service.ScanPayQueryService;
+import com.tencent.service.ScanPayService;
 import com.thoughtworks.xstream.io.StreamException;
+
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 import org.slf4j.LoggerFactory;
 
 /**
@@ -20,8 +30,9 @@ import org.slf4j.LoggerFactory;
  */
 public class DownloadBillBusiness {
 
-    public DownloadBillBusiness() throws IllegalAccessException, ClassNotFoundException, InstantiationException {
-        downloadBillService = new DownloadBillService();
+    public DownloadBillBusiness(String certLocalPath,String certPassword,String keyPartner) throws IllegalAccessException, ClassNotFoundException, InstantiationException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+     	key = keyPartner;
+    	downloadBillService = new DownloadBillService(certLocalPath,certPassword);
     }
 
     public interface ResultListener{
@@ -46,6 +57,8 @@ public class DownloadBillBusiness {
     private static String result = "";
 
     private DownloadBillService downloadBillService;
+    
+    private String key = null;
 
     /**
      * 请求对账单下载服务
@@ -55,11 +68,16 @@ public class DownloadBillBusiness {
      * @throws Exception
      */
 
-    public void run(DownloadBillReqData downloadBillReqData,ResultListener resultListener) throws Exception {
+    public void run(DownloadBillReqData downloadBillReqData,ResultListener resultListener,String certLocalPath,String certPassword) throws Exception {
 
         //--------------------------------------------------------------------
         //构造请求“对账单API”所需要提交的数据
         //--------------------------------------------------------------------
+    	
+        String appId = downloadBillReqData.getAppid();  
+        String mchId = downloadBillReqData.getMch_id();
+        String subMchId = downloadBillReqData.getSub_mch_id();
+        String deviceInfo = downloadBillReqData.getDevice_info();
 
         //API返回的数据
         String downloadBillServiceResponseString;
@@ -110,34 +128,50 @@ public class DownloadBillBusiness {
             }
             returnCode = "SUCCESS";
         } finally {
-
-            ReportReqData reportReqData = new ReportReqData(
-                    downloadBillReqData.getDevice_info(),
-                    Configure.DOWNLOAD_BILL_API,
-                    (int) (totalTimeCost),//本次请求耗时
-                    returnCode,
-                    returnMsg,
-                    "",
-                    "",
-                    "",
-                    "",
-                    Configure.getIP()
-            );
-
-            long timeAfterReport;
-            if(Configure.isUseThreadToDoReport()){
-                ReporterFactory.getReporter(reportReqData).run();
-                timeAfterReport = System.currentTimeMillis();
-                Util.log("pay+report总耗时（异步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
-            }else{
-                ReportService.request(reportReqData);
-                timeAfterReport = System.currentTimeMillis();
-                Util.log("pay+report总耗时（同步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
+        	
+            //上报腾讯API效率
+            if(Configure.isReportFlag() ){
+            	this.report(downloadBillReqData,totalTimeCost,null,deviceInfo,costTimeStart,appId,mchId,subMchId,certLocalPath,certPassword,returnCode,returnMsg);
             }
         }
     }
 
-    public void setDownloadBillService(DownloadBillService service) {
+    private void report(DownloadBillReqData downloadBillReqData, long totalTimeCost, Object object, String deviceInfo,
+			long costTimeStart, String appId, String mchId, String subMchId, String certLocalPath,
+			String certPassword,String returnCode,String returnMsg) throws Exception {
+		// TODO Auto-generated method stub
+
+ 
+        ReportReqData reportReqData = new ReportReqData(
+                downloadBillReqData.getDevice_info(),
+                Configure.DOWNLOAD_BILL_API,
+                (int) (totalTimeCost),//本次请求耗时
+                returnCode,
+                returnMsg,
+                returnCode,
+                returnCode,
+                returnMsg,
+                "",
+                Configure.getIP(),
+                this.key,
+                appId,
+                mchId,
+                subMchId
+        );
+        long timeAfterReport;
+        if (Configure.isUseThreadToDoReport()) {
+            ReporterFactory.getReporter(reportReqData,certLocalPath,certPassword).run();
+            timeAfterReport = System.currentTimeMillis();
+            log.i("pay+report总耗时（异步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        } else {
+            ReportService.request(reportReqData,certLocalPath,certPassword);
+            timeAfterReport = System.currentTimeMillis();
+            log.i("pay+report总耗时（同步方式上报）：" + (timeAfterReport - costTimeStart) + "ms");
+        }
+
+	}
+
+	public void setDownloadBillService(DownloadBillService service) {
         downloadBillService = service;
     }
 

@@ -1,5 +1,11 @@
 package com.tencent.service;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 import com.tencent.common.Configure;
 import com.tencent.common.HttpsRequest;
 import com.tencent.common.RandomStringGenerator;
@@ -13,8 +19,8 @@ import com.tencent.protocol.reverse_protocol.ReverseReqData;
  */
 public class ReverseService extends BaseService{
 
-    public ReverseService() throws IllegalAccessException, InstantiationException, ClassNotFoundException {
-        super(Configure.REVERSE_API);
+    public ReverseService(String certLocalPath,String certPassword) throws IllegalAccessException, InstantiationException, ClassNotFoundException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        super(Configure.REVERSE_API,certLocalPath,certPassword);
     }
 
     /**

@@ -1,9 +1,18 @@
 package com.tencent.common;
 
-import com.tencent.service.IServiceRequest;
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.DomDriver;
-import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -18,14 +27,10 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.SocketTimeoutException;
-import java.security.*;
-import java.security.cert.CertificateException;
+import com.tencent.service.IServiceRequest;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
 
 /**
  * User: rizenguo
@@ -57,28 +62,33 @@ public class HttpsRequest implements IServiceRequest{
 
     //HTTP请求器
     private CloseableHttpClient httpClient;
-
-    public HttpsRequest() throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        init();
+    
+    public HttpsRequest(String certLocalPath,String certPassword) throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        init(certLocalPath,certPassword);
     }
 
-    private void init() throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
+//    public HttpsRequest() throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+//        init();
+//    }
+    
+    // 为适应多服务商修改，牺牲了程序的灵活性
+    private void init(String certLocalPath,String certPassword) throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
 
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        FileInputStream instream = new FileInputStream(new File(Configure.getCertLocalPath()));//加载本地的证书进行https加密传输
+        FileInputStream instream = new FileInputStream(new File(certLocalPath));//加载本地的证书进行https加密传输
         try {
-            keyStore.load(instream, Configure.getCertPassword().toCharArray());//设置证书密码
+            keyStore.load(instream, certPassword.toCharArray());//设置证书密码
         } catch (CertificateException e) {
-            e.printStackTrace();
+        	log.e("SSL证书异常:"+certLocalPath);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        	log.e("SSL证书不可用:"+certLocalPath);
         } finally {
             instream.close();
         }
 
         // Trust own CA and all self-signed certs
         SSLContext sslcontext = SSLContexts.custom()
-                .loadKeyMaterial(keyStore, Configure.getCertPassword().toCharArray())
+                .loadKeyMaterial(keyStore, certPassword.toCharArray())
                 .build();
         // Allow TLSv1 protocol only
         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
@@ -97,6 +107,41 @@ public class HttpsRequest implements IServiceRequest{
         hasInit = true;
     }
 
+//    private void init() throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
+//
+//        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+//        FileInputStream instream = new FileInputStream(new File(Configure.getCertLocalPath()));//加载本地的证书进行https加密传输
+//        try {
+//            keyStore.load(instream, Configure.getCertPassword().toCharArray());//设置证书密码
+//        } catch (CertificateException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        } finally {
+//            instream.close();
+//        }
+//
+//        // Trust own CA and all self-signed certs
+//        SSLContext sslcontext = SSLContexts.custom()
+//                .loadKeyMaterial(keyStore, Configure.getCertPassword().toCharArray())
+//                .build();
+//        // Allow TLSv1 protocol only
+//        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+//                sslcontext,
+//                new String[]{"TLSv1"},
+//                null,
+//                SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+//
+//        httpClient = HttpClients.custom()
+//                .setSSLSocketFactory(sslsf)
+//                .build();
+//
+//        //根据默认超时限制初始化requestConfig
+//        requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout).setConnectTimeout(connectTimeout).build();
+//
+//        hasInit = true;
+//    }
+
     /**
      * 通过Https往API post xml数据
      *
@@ -112,11 +157,13 @@ public class HttpsRequest implements IServiceRequest{
 
     public String sendPost(String url, Object xmlObj) throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
 
-        if (!hasInit) {
-            init();
-        }
-
         String result = null;
+        
+        if (!hasInit) {
+//          init();
+      	    log.e("请调用新版HttpsRequest初始化函数");
+      	    return result;
+        }
 
         HttpPost httpPost = new HttpPost(url);
 

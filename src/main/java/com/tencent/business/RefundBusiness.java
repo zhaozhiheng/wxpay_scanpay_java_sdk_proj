@@ -11,6 +11,14 @@ import com.tencent.common.report.service.ReportService;
 import com.tencent.protocol.refund_protocol.RefundReqData;
 import com.tencent.protocol.refund_protocol.RefundResData;
 import com.tencent.service.RefundService;
+import com.tencent.service.ScanPayService;
+
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+
 import org.slf4j.LoggerFactory;
 
 /**
@@ -20,8 +28,9 @@ import org.slf4j.LoggerFactory;
  */
 public class RefundBusiness {
 
-    public RefundBusiness() throws IllegalAccessException, ClassNotFoundException, InstantiationException {
-        refundService = new RefundService();
+    public RefundBusiness(String certLocalPath,String certPassword,String keyPartner) throws IllegalAccessException, ClassNotFoundException, InstantiationException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+    	key = keyPartner;
+        refundService = new RefundService(certLocalPath,certPassword);
     }
 
     public interface ResultListener{
@@ -49,6 +58,8 @@ public class RefundBusiness {
     private static String result = "";
 
     private RefundService refundService;
+    
+    private String key = null;
 
     /**
      * 调用退款业务逻辑
@@ -56,12 +67,16 @@ public class RefundBusiness {
      * @param resultListener 业务逻辑可能走到的结果分支，需要商户处理
      * @throws Exception
      */
-    public void run(RefundReqData refundReqData,ResultListener resultListener) throws Exception {
+    public void run(RefundReqData refundReqData,ResultListener resultListener,String certLocalPath,String certPassword) throws Exception {
 
         //--------------------------------------------------------------------
         //构造请求“退款API”所需要提交的数据
         //--------------------------------------------------------------------
-
+        String outTradeNo = refundReqData.getOut_trade_no();
+        String appId = refundReqData.getAppid();  
+        String mchId = refundReqData.getMch_id();
+        String subMchId = refundReqData.getSub_mch_id();
+        String deviceInfo = refundReqData.getDevice_info();
         //API返回的数据
         String refundServiceResponseString;
 
@@ -81,31 +96,12 @@ public class RefundBusiness {
         //将从API返回的XML数据映射到Java对象
         RefundResData refundResData = (RefundResData) Util.getObjectFromXML(refundServiceResponseString, RefundResData.class);
 
-
-        ReportReqData reportReqData = new ReportReqData(
-                refundResData.getDevice_info(),
-                Configure.REFUND_API,
-                (int) (totalTimeCost),//本次请求耗时
-                refundResData.getReturn_code(),
-                refundResData.getReturn_msg(),
-                refundResData.getResult_code(),
-                refundResData.getErr_code(),
-                refundResData.getErr_code_des(),
-                refundResData.getOut_trade_no(),
-                Configure.getIP()
-        );
-
-        long timeAfterReport;
-        if(Configure.isUseThreadToDoReport()){
-            ReporterFactory.getReporter(reportReqData).run();
-            timeAfterReport = System.currentTimeMillis();
-            Util.log("pay+report总耗时（异步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
-        }else{
-            ReportService.request(reportReqData);
-            timeAfterReport = System.currentTimeMillis();
-            Util.log("pay+report总耗时（同步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
+        //上报腾讯API效率
+        if(Configure.isReportFlag() ){
+        	this.report(refundResData,totalTimeCost,null,deviceInfo,costTimeStart,appId,mchId,subMchId,certLocalPath,certPassword);
         }
-
+        
+        
         if (refundResData == null || refundResData.getReturn_code() == null) {
             setResult("Case1:退款API请求逻辑错误，请仔细检测传过去的每一个参数是否合法，或是看API能否被正常访问",Log.LOG_TYPE_ERROR);
             resultListener.onFailByReturnCodeError(refundResData);
@@ -125,7 +121,7 @@ public class RefundBusiness {
             //收到API的返回数据的时候得先验证一下数据有没有被第三方篡改，确保安全
             //--------------------------------------------------------------------
 
-            if (!Signature.checkIsSignValidFromResponseString(refundServiceResponseString)) {
+            if (!Signature.checkIsSignValidFromResponseString(refundServiceResponseString,key)) {
                 setResult("Case3:退款请求API返回的数据签名验证失败，有可能数据被篡改了",Log.LOG_TYPE_ERROR);
                 resultListener.onFailBySignInvalid(refundResData);
                 return;
@@ -144,7 +140,40 @@ public class RefundBusiness {
         }
     }
 
-    public void setRefundService(RefundService service) {
+    private void report(RefundResData refundResData, long totalTimeCost, Object object, String deviceInfo,
+			long costTimeStart, String appId, String mchId, String subMchId, String certLocalPath,
+			String certPassword) throws Exception {
+		// TODO Auto-generated method stub
+    	ReportReqData reportReqData = new ReportReqData(
+                refundResData.getDevice_info(),
+                Configure.REFUND_API,
+                (int) (totalTimeCost),//本次请求耗时
+                refundResData.getReturn_code(),
+                refundResData.getReturn_msg(),
+                refundResData.getResult_code(),
+                refundResData.getErr_code(),
+                refundResData.getErr_code_des(),
+                refundResData.getOut_trade_no(),
+                Configure.getIP(),
+                this.key,
+                appId,
+                mchId,
+                subMchId
+        );
+
+        long timeAfterReport;
+        if(Configure.isUseThreadToDoReport()){
+            ReporterFactory.getReporter(reportReqData,certLocalPath,certPassword).run();
+            timeAfterReport = System.currentTimeMillis();
+            Util.log("pay+report总耗时（异步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
+        }else{
+            ReportService.request(reportReqData,certLocalPath,certPassword);
+            timeAfterReport = System.currentTimeMillis();
+            Util.log("pay+report总耗时（同步方式上报）："+(timeAfterReport-costTimeStart) + "ms");
+        }
+	}
+
+	public void setRefundService(RefundService service) {
         refundService = service;
     }
 

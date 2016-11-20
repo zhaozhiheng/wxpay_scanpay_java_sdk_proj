@@ -54,19 +54,18 @@ public class ReportReqData {
      * @param outTradeNo API返回的对应字段
      * @param userIp 发起接口调用时的机器IP
      */
-    public ReportReqData(String deviceInfo, String interfaceUrl,int executeTimeCost, String returnCode,String returnMsg,String resultCode,String errCode,String errCodeDes, String outTradeNo,String userIp){
+    public ReportReqData(String deviceInfo, String interfaceUrl,int executeTimeCost, String returnCode,String returnMsg,String resultCode,String errCode,String errCodeDes, String outTradeNo,String userIp,String keyPartner,String appId,String mchId,String subMchId){
 
         setSdk_version(Configure.getSdkVersion());
-
         //微信分配的公众号ID（开通公众号之后可以获取到）
-        setAppid(Configure.getAppid());
+        setAppid(appId);
 
         //商户系统自己生成的唯一的订单号
         setOut_trade_no(outTradeNo);
 
         //微信支付分配的商户号ID（开通公众号的微信支付功能之后可以获取到）
-        setMch_id(Configure.getMchid());
-        setSub_mch_id(Configure.getSubMchid());
+        setMch_id(mchId);
+        setSub_mch_id(subMchId);
         setDevice_info(deviceInfo);
         setInterface_url(interfaceUrl);
         setExecute_time_cost(executeTimeCost);
@@ -82,7 +81,7 @@ public class ReportReqData {
         setNonce_str(RandomStringGenerator.getRandomStringByLength(32));
 
         //根据API给的签名规则进行签名
-        String sign = Signature.getSign(toMap());
+        String sign = Signature.getSign(toMap(),keyPartner);
         setSign(sign);//把签名数据设置到Sign这个属性中
     }
 

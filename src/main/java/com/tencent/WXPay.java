@@ -4,14 +4,18 @@ import com.tencent.business.DownloadBillBusiness;
 import com.tencent.business.RefundBusiness;
 import com.tencent.business.RefundQueryBusiness;
 import com.tencent.business.ScanPayBusiness;
-import com.tencent.common.Configure;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
 import com.tencent.protocol.pay_protocol.ScanPayReqData;
 import com.tencent.protocol.pay_query_protocol.ScanPayQueryReqData;
 import com.tencent.protocol.refund_protocol.RefundReqData;
 import com.tencent.protocol.refund_query_protocol.RefundQueryReqData;
 import com.tencent.protocol.reverse_protocol.ReverseReqData;
-import com.tencent.service.*;
+import com.tencent.service.DownloadBillService;
+import com.tencent.service.RefundQueryService;
+import com.tencent.service.RefundService;
+import com.tencent.service.ReverseService;
+import com.tencent.service.ScanPayQueryService;
+import com.tencent.service.ScanPayService;
 
 /**
  * SDK总入口
@@ -26,7 +30,7 @@ public class WXPay {
      * @param sdbMchID 子商户ID，受理模式必填
      * @param certLocalPath HTTP证书在服务器中的路径，用来加载证书用
      * @param certPassword HTTP证书的密码，默认等于MCHID
-     */
+      
     public static void initSDKConfiguration(String key,String appID,String mchID,String sdbMchID,String certLocalPath,String certPassword){
         Configure.setKey(key);
         Configure.setAppID(appID);
@@ -34,7 +38,7 @@ public class WXPay {
         Configure.setSubMchID(sdbMchID);
         Configure.setCertLocalPath(certLocalPath);
         Configure.setCertPassword(certPassword);
-    }
+    }*/
 
     /**
      * 请求支付服务
@@ -42,8 +46,8 @@ public class WXPay {
      * @return API返回的数据
      * @throws Exception
      */
-    public static String requestScanPayService(ScanPayReqData scanPayReqData) throws Exception{
-        return new ScanPayService().request(scanPayReqData);
+    public static String requestScanPayService(ScanPayReqData scanPayReqData,String certLocalPath,String certPassword) throws Exception{
+        return new ScanPayService(certLocalPath,certPassword).request(scanPayReqData);
     }
 
     /**
@@ -52,8 +56,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-	public static String requestScanPayQueryService(ScanPayQueryReqData scanPayQueryReqData) throws Exception{
-		return new ScanPayQueryService().request(scanPayQueryReqData);
+	public static String requestScanPayQueryService(ScanPayQueryReqData scanPayQueryReqData,String certLocalPath,String certPassword,String keyPartner) throws Exception{
+		return new ScanPayQueryService(certLocalPath,certPassword).request(scanPayQueryReqData);
 	}
 
     /**
@@ -62,8 +66,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-    public static String requestRefundService(RefundReqData refundReqData) throws Exception{
-        return new RefundService().request(refundReqData);
+    public static String requestRefundService(RefundReqData refundReqData,String certLocalPath,String certPassword) throws Exception{
+        return new RefundService(certLocalPath,certPassword).request(refundReqData);        
     }
 
     /**
@@ -72,8 +76,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-	public static String requestRefundQueryService(RefundQueryReqData refundQueryReqData) throws Exception{
-		return new RefundQueryService().request(refundQueryReqData);
+	public static String requestRefundQueryService(RefundQueryReqData refundQueryReqData,String certLocalPath,String certPassword) throws Exception{
+		return new RefundQueryService(certLocalPath,certPassword).request(refundQueryReqData);		
 	}
 
     /**
@@ -82,8 +86,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-	public static String requestReverseService(ReverseReqData reverseReqData) throws Exception{
-		return new ReverseService().request(reverseReqData);
+	public static String requestReverseService(ReverseReqData reverseReqData,String certLocalPath,String certPassword) throws Exception{
+		return new ReverseService(certLocalPath,certPassword).request(reverseReqData);
 	}
 
     /**
@@ -92,8 +96,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-    public static String requestDownloadBillService(DownloadBillReqData downloadBillReqData) throws Exception{
-        return new DownloadBillService().request(downloadBillReqData);
+    public static String requestDownloadBillService(DownloadBillReqData downloadBillReqData,String certLocalPath,String certPassword) throws Exception{
+        return new DownloadBillService(certLocalPath,certPassword).request(downloadBillReqData);
     }
 
     /**
@@ -102,8 +106,8 @@ public class WXPay {
      * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws Exception
      */
-    public static void doScanPayBusiness(ScanPayReqData scanPayReqData, ScanPayBusiness.ResultListener resultListener) throws Exception {
-        new ScanPayBusiness().run(scanPayReqData, resultListener);
+    public static void doScanPayBusiness(ScanPayReqData scanPayReqData, ScanPayBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new ScanPayBusiness(certLocalPath,certPassword,keyPartner).run(scanPayReqData, resultListener,certLocalPath,certPassword);
     }
 
     /**
@@ -112,8 +116,8 @@ public class WXPay {
      * @param resultListener 业务逻辑可能走到的结果分支，需要商户处理
      * @throws Exception
      */
-    public static void doRefundBusiness(RefundReqData refundReqData, RefundBusiness.ResultListener resultListener) throws Exception {
-        new RefundBusiness().run(refundReqData,resultListener);
+    public static void doRefundBusiness(RefundReqData refundReqData, RefundBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new RefundBusiness(certLocalPath,certPassword,keyPartner).run(refundReqData, resultListener,certLocalPath,certPassword);
     }
 
     /**
@@ -122,8 +126,8 @@ public class WXPay {
      * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws Exception
      */
-    public static void doRefundQueryBusiness(RefundQueryReqData refundQueryReqData,RefundQueryBusiness.ResultListener resultListener) throws Exception {
-        new RefundQueryBusiness().run(refundQueryReqData,resultListener);
+    public static void doRefundQueryBusiness(RefundQueryReqData refundQueryReqData,RefundQueryBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new RefundQueryBusiness(certLocalPath,certPassword,keyPartner).run(refundQueryReqData,resultListener,certLocalPath,certPassword);
     }
 
     /**
@@ -133,8 +137,8 @@ public class WXPay {
      * @return API返回的XML数据
      * @throws Exception
      */
-    public static void doDownloadBillBusiness(DownloadBillReqData downloadBillReqData,DownloadBillBusiness.ResultListener resultListener) throws Exception {
-        new DownloadBillBusiness().run(downloadBillReqData,resultListener);
+    public static void doDownloadBillBusiness(DownloadBillReqData downloadBillReqData,DownloadBillBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new DownloadBillBusiness(certLocalPath,certPassword,keyPartner).run(downloadBillReqData,resultListener,certLocalPath,certPassword);
     }
 
 

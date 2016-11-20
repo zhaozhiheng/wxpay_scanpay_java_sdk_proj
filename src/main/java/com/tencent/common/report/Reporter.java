@@ -18,8 +18,8 @@ public class Reporter {
      * 请求统计上报API
      * @param reportReqData 这个数据对象里面包含了API要求提交的各种数据字段
      */
-    public Reporter(ReportReqData reportReqData){
-        rs = new ReportService(reportReqData);
+    public Reporter(ReportReqData reportReqData,String certLocalPath,String certPassword){
+        rs = new ReportService(reportReqData,certLocalPath,certPassword);
     }
 
     public void run(){
