@@ -141,6 +141,11 @@ public class ScanPayBusiness {
         //将从API返回的XML数据映射到Java对象
         ScanPayResData scanPayResData = (ScanPayResData) Util.getObjectFromXML(payServiceResponseString, ScanPayResData.class);
         
+        // 支付失败时，商户系统订单ID回显
+        if (scanPayResData != null && (scanPayResData.getOut_trade_no() == null || "".equals(scanPayResData.getOut_trade_no().trim()))) {
+            scanPayResData.setOut_trade_no(outTradeNo);
+        }
+        
         //上报腾讯API效率
         if(Configure.isReportFlag() ){
         	this.report(scanPayResData,totalTimeCost,spBillCreateIp,deviceInfo,costTimeStart,appId,mchId,subMchId,certLocalPath,certPassword);
