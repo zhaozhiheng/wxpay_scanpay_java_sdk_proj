@@ -41,6 +41,12 @@ public class Configure {
 
 	//7) 统计上报API
 	public static String REPORT_API = "https://api.mch.weixin.qq.com/payitil/report";
+	
+	//8) 统一下单API
+	public static String UNIFIED_API = "https://api.mch.weixin.qq.com/pay/unifiedorder";
+	
+	//9) 关闭订单API
+	public static String ORDER_CLOSE_API = "https://api.mch.weixin.qq.com/pay/closeorder";
 
 	public static boolean isUseThreadToDoReport() {
 		return useThreadToDoReport;
