@@ -1,6 +1,5 @@
 package com.tencent.protocol.unified_order_protocol;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,10 +13,7 @@ import com.tencent.common.Signature;
  * 
  * @author 孟郑宏
  */
-public class JSPayReqData
-    implements Serializable {
-
-    private static final long serialVersionUID = -3962259263581846277L;
+public class JSPayReqData {
 
     private String appId;
     private String timeStamp;
@@ -26,12 +22,10 @@ public class JSPayReqData
     private String signType;
     private String paySign;
 
-    
-    
     public JSPayReqData(String appId, String prepayId, String keyPartner) {
         this.appId = appId;
         this.dataPackage = "prepay_id="  + prepayId;
-        setTimeStamp(new Date().getTime() + "");
+        setTimeStamp(new Date().getTime() / 1000 + "");// 毫秒级转换成秒级，10位
         setNonceStr(RandomStringGenerator.getRandomStringByLength(32));
         setSignType("MD5");
         //根据API给的签名规则进行签名
@@ -95,7 +89,12 @@ public class JSPayReqData
             try {
                 obj = field.get(this);
                 if(obj!=null){
-                    map.put(field.getName(), obj);
+                	if (field.getName().equals("dataPackage")) {
+                		
+                		map.put("package", obj);// package是java 关键字，需要转换，否则报签名错误
+                	} else {
+                		map.put(field.getName(), obj);
+                	}
                 }
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
