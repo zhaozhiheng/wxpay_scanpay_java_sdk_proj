@@ -18,11 +18,12 @@ public class UnifiedOrderResData {
 
     private String device_info = "";
 
+    private String out_trade_no="";
     //业务返回的具体数据（以下字段在return_code 和result_code 都为SUCCESS 的时候有返回）    
     private String trade_type = "";
     private String prepay_id = "";
     private String code_url = "";
-     
+    
 
     public String getReturn_code() {
         return return_code;
@@ -143,4 +144,13 @@ public class UnifiedOrderResData {
 	public void setCode_url(String code_url) {
 		this.code_url = code_url;
 	}
+    
+    public String getOut_trade_no() {
+        return out_trade_no;
+    }
+    
+    public void setOut_trade_no(String out_trade_no) {
+        this.out_trade_no = out_trade_no;
+    }
+	
 }

@@ -91,11 +91,15 @@ public class UnifiedOrderBusiness {
         log.i(responseString);
         //将从API返回的XML数据映射到Java对象
         UnifiedOrderResData unifiedOrderResData = (UnifiedOrderResData) Util.getObjectFromXML(responseString, UnifiedOrderResData.class);
+        
         if (unifiedOrderResData == null) {
             log.i("统一下单请求逻辑错误，请仔细检测传过去的每一个参数是否合法");
             resultListener.onFailByReturnCodeError(unifiedOrderResData);
             return false;
         }
+        // 回传商户系统订单ID
+        unifiedOrderResData.setOut_trade_no(unifiedOrderReqData.getOut_trade_no());
+        
         if (unifiedOrderResData.getReturn_code().equals("FAIL")) {
             //注意：一般这里返回FAIL是出现系统级参数错误，请检测Post给API的数据是否规范合法
             log.i("统一下单API系统返回失败，失败信息为：" + unifiedOrderResData.getReturn_msg());

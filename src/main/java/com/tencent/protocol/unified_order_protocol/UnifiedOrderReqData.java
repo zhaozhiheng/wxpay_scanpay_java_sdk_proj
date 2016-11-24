@@ -84,8 +84,6 @@ public class UnifiedOrderReqData {
 		this.sub_mch_id = sub_mch_id;
 		this.device_info = device_info;
 		this.nonce_str = RandomStringGenerator.getRandomStringByLength(32);
-		//根据API给的签名规则进行签名
-		this.sign = Signature.getSign(toMap(),keyPartner);
 		this.sign_type = sign_type;
 		this.body = body;
 		this.detail = detail;
@@ -104,6 +102,8 @@ public class UnifiedOrderReqData {
 		this.limit_pay = limit_pay;
 		this.openid = openid;
 		this.sub_openid = sub_openid; 
+		//根据API给的签名规则进行签名
+		this.sign = Signature.getSign(toMap(),keyPartner);
 	}
     
      
