@@ -1,6 +1,7 @@
 package com.tencent;
 
 import com.tencent.business.DownloadBillBusiness;
+import com.tencent.business.OrderQueryBusiness;
 import com.tencent.business.RefundBusiness;
 import com.tencent.business.RefundQueryBusiness;
 import com.tencent.business.ReverseBusiness;
@@ -208,5 +209,18 @@ public class WXPay {
      */
     public static void doUnifiedOrderBusiness(UnifiedOrderReqData unifiedOrderReqData, UnifiedOrderBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
         new UnifiedOrderBusiness(certLocalPath,certPassword,keyPartner).run(unifiedOrderReqData, resultListener,certLocalPath,certPassword);
+    }
+    
+    /**
+     * 直接执行统一下单业务逻辑 
+     * @param unifiedOrderReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param certLocalPath 服务商证书路径
+     * @param certPassword 服务商证书密码 
+     * @param keyPartner
+     * @throws Exception
+     */
+    public static void doOrderQueryBusiness(ScanPayQueryReqData orderQueryReqData, OrderQueryBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new OrderQueryBusiness(certLocalPath,certPassword,keyPartner).run(orderQueryReqData, resultListener,certLocalPath,certPassword);
     }
 }
