@@ -47,16 +47,16 @@ public class OrderQueryBusiness {
     }
     
     /**
-     * 直接执行查询下单业务逻辑 
+     * 直接执行订单查询业务逻辑 
      *
      * @param scanPayReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听订单查询业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws Exception
      */
 	public void run(ScanPayQueryReqData scanPayQueryReqData, ResultListener resultListener, String certLocalPath,String certPassword) throws Exception {
 
         //--------------------------------------------------------------------
-        //构造请求“被扫支付API”所需要提交的数据
+        //构造请求“订单查询”所需要提交的数据
         //--------------------------------------------------------------------
  
 
@@ -68,8 +68,6 @@ public class OrderQueryBusiness {
         long costTimeEnd = System.currentTimeMillis();
         long totalTimeCost = costTimeEnd - costTimeStart;
         log.i("api请求总耗时：" + totalTimeCost + "ms");
-
- 
  
     }
 	/**

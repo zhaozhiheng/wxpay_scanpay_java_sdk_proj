@@ -1,5 +1,6 @@
 package com.tencent;
 
+import com.tencent.business.CloseOrderBusiness;
 import com.tencent.business.DownloadBillBusiness;
 import com.tencent.business.OrderQueryBusiness;
 import com.tencent.business.RefundBusiness;
@@ -7,6 +8,7 @@ import com.tencent.business.RefundQueryBusiness;
 import com.tencent.business.ReverseBusiness;
 import com.tencent.business.ScanPayBusiness;
 import com.tencent.business.UnifiedOrderBusiness;
+import com.tencent.protocol.close_order_protocol.CloseOrderReqData;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
 import com.tencent.protocol.pay_protocol.ScanPayReqData;
 import com.tencent.protocol.pay_query_protocol.ScanPayQueryReqData;
@@ -74,7 +76,7 @@ public class WXPay {
     /**
      * 运行退款查询的业务逻辑
      * @param refundQueryReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听退款查询业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 
      * @param keyPartner
@@ -87,7 +89,7 @@ public class WXPay {
     /**
      * 请求对账单下载服务
      * @param downloadBillReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听账单下载业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 
      * @param keyPartner
@@ -101,7 +103,7 @@ public class WXPay {
     /**
      * 直接执行被撤销订单
      * @param scanPayReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听撤销订单业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 
      * @param keyPartner
@@ -201,7 +203,7 @@ public class WXPay {
     /**
      * 直接执行统一下单业务逻辑 
      * @param unifiedOrderReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听统一下单业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 
      * @param keyPartner
@@ -212,9 +214,9 @@ public class WXPay {
     }
     
     /**
-     * 直接执行统一下单业务逻辑 
-     * @param unifiedOrderReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * 直接执行订单查询业务逻辑，请求参数和扫码查询请求包通用
+     * @param orderQueryReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param resultListener 商户需要自己监听关闭订单业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 
      * @param keyPartner
@@ -223,4 +225,18 @@ public class WXPay {
     public static void doOrderQueryBusiness(ScanPayQueryReqData orderQueryReqData, OrderQueryBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
         new OrderQueryBusiness(certLocalPath,certPassword,keyPartner).run(orderQueryReqData, resultListener,certLocalPath,certPassword);
     }
+    
+    /**
+     * 直接执行统一下单业务逻辑 
+     * @param unifiedOrderReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param resultListener 商户需要自己监听统一下单业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param certLocalPath 服务商证书路径
+     * @param certPassword 服务商证书密码 
+     * @param keyPartner
+     * @throws Exception
+     */
+    public static void doCloseOrderBusiness(CloseOrderReqData closeOrderReqData, CloseOrderBusiness.ResultListener resultListener,String certLocalPath,String certPassword,String keyPartner) throws Exception {
+        new CloseOrderBusiness(certLocalPath,certPassword,keyPartner).run(closeOrderReqData, resultListener,certLocalPath,certPassword);
+    }
+    
 }

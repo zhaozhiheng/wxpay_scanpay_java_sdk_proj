@@ -15,6 +15,7 @@ public class WxPayNotifyData {
     private String appid = "";
     private String mch_id = "";
     private String sub_mch_id = "";
+    private String sub_appid = "";
     private String device_info = "";
     private String nonce_str = "";
     private String sign = "";
@@ -81,6 +82,14 @@ public class WxPayNotifyData {
 
     public void setSub_mch_id(String sub_mch_id) {
         this.sub_mch_id = sub_mch_id;
+    }
+    
+    public String getSub_appid() {
+        return sub_appid;
+    }
+    
+    public void setSub_appid(String sub_appid) {
+        this.sub_appid = sub_appid;
     }
 
     public String getDevice_info() {
