@@ -47,6 +47,14 @@ public class Configure {
 	
 	//9) 关闭订单API
 	public static String ORDER_CLOSE_API = "https://api.mch.weixin.qq.com/pay/closeorder";
+	
+	/**------------------------------公众号接口URL----------------------------------*/
+	/**获取/刷新基础支持的AccessToken， 需要替换参数 APPID、APPSECRET*/
+	public static String GET_BASE_ACCESS_TOKEN = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET";
+	
+	/**发送模版消息， 需要替换参数 ACCESS_TOKEN*/
+    public static String SEND_TEMPLATE_MESSAGE = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN";
+	
 
 	public static boolean isUseThreadToDoReport() {
 		return useThreadToDoReport;
