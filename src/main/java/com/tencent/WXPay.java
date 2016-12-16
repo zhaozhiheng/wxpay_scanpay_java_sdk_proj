@@ -8,7 +8,7 @@ import com.tencent.business.RefundQueryBusiness;
 import com.tencent.business.ReverseBusiness;
 import com.tencent.business.ScanPayBusiness;
 import com.tencent.business.UnifiedOrderBusiness;
-import com.tencent.protocol.base_access_token_protocol.GetBaseAccessTokenReqData;
+import com.tencent.protocol.appid.base_access_token_protocol.GetBaseAccessTokenReqData;
 import com.tencent.protocol.close_order_protocol.CloseOrderReqData;
 import com.tencent.protocol.downloadbill_protocol.DownloadBillReqData;
 import com.tencent.protocol.pay_protocol.ScanPayReqData;
@@ -16,17 +16,21 @@ import com.tencent.protocol.pay_query_protocol.ScanPayQueryReqData;
 import com.tencent.protocol.refund_protocol.RefundReqData;
 import com.tencent.protocol.refund_query_protocol.RefundQueryReqData;
 import com.tencent.protocol.reverse_protocol.ReverseReqData;
-import com.tencent.protocol.send_template_msg_protocol.SendTemplateMsgReqData;
+import com.tencent.protocol.appid.send_template_msg_protocol.SendTemplateMsgReqData;
+import com.tencent.protocol.appid.sns_access_token_protocol.GetAuthAccessTokenReqData;
+import com.tencent.protocol.appid.sns_userinfo_protocol.GetUserinfoReqData;
 import com.tencent.protocol.unified_order_protocol.UnifiedOrderReqData;
 import com.tencent.service.DownloadBillService;
-import com.tencent.service.GetBaseAccessTokenService;
 import com.tencent.service.RefundQueryService;
 import com.tencent.service.RefundService;
 import com.tencent.service.ReverseService;
 import com.tencent.service.ScanPayQueryService;
 import com.tencent.service.ScanPayService;
-import com.tencent.service.SendTemplateMsgService;
 import com.tencent.service.UnifiedOrderService;
+import com.tencent.service.appid.GetAuthAccessTokenService;
+import com.tencent.service.appid.GetBaseAccessTokenService;
+import com.tencent.service.appid.GetUserinfoService;
+import com.tencent.service.appid.SendTemplateMsgService;
 
 /**
  * SDK总入口
@@ -265,6 +269,30 @@ public class WXPay {
      */
     public static String requestSendTemplateMsgService(SendTemplateMsgReqData sendTemplateMsgReqData, String accessToken, String certLocalPath,String certPassword) throws Exception{
         return new SendTemplateMsgService(certLocalPath,certPassword).request(sendTemplateMsgReqData, accessToken);
+    }
+    
+    /**
+     * 请求网页授权获取/刷新  AccessToken、openid
+     * @param getAuthAccessTokenReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param certLocalPath 服务商证书路径
+     * @param certPassword 服务商证书密码 
+     * @return API返回的JSON数据
+     * @throws Exception
+     */
+    public static String requestGetAuthAccessTokenService(GetAuthAccessTokenReqData getAuthAccessTokenReqData,String certLocalPath,String certPassword) throws Exception{
+        return new GetAuthAccessTokenService(certLocalPath,certPassword).request(getAuthAccessTokenReqData);
+    }
+    
+    /**
+     * 请求网页授权拉取用户信息
+     * @param getUserinfoReqData 这个数据对象里面包含了API要求提交的各种数据字段
+     * @param certLocalPath 服务商证书路径
+     * @param certPassword 服务商证书密码 
+     * @return API返回的JSON数据
+     * @throws Exception
+     */
+    public static String requestGetUserinfoService(GetUserinfoReqData getUserinfoReqData,String certLocalPath,String certPassword) throws Exception{
+        return new GetUserinfoService(certLocalPath,certPassword).request(getUserinfoReqData);
     }
     
 }

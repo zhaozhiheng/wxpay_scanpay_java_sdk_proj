@@ -1,4 +1,4 @@
-package com.tencent.service;
+package com.tencent.service.appid;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -7,7 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
 import com.tencent.common.Configure;
-import com.tencent.protocol.base_access_token_protocol.GetBaseAccessTokenReqData;
+import com.tencent.protocol.appid.base_access_token_protocol.GetBaseAccessTokenReqData;
+import com.tencent.service.BaseService;
 
 /**
  * 获取/刷新基础支持的AccessToken服务类目前调用限制，2000/天
