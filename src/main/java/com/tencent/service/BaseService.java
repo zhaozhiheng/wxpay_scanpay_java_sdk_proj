@@ -6,7 +6,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
-import com.tencent.common.Configure;
 import com.tencent.common.HttpsRequest;
 
 /**
@@ -18,7 +17,7 @@ import com.tencent.common.HttpsRequest;
 public class BaseService{
 
     //API的地址
-    private String apiURL;
+    protected String apiURL;
 
     //发请求的HTTPS请求器
     private IServiceRequest serviceRequest;
@@ -30,6 +29,14 @@ public class BaseService{
 
     protected String sendPost(Object xmlObj) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return serviceRequest.sendPost(apiURL,xmlObj);
+    }
+
+    protected String sendPostJSON(Object jsonObj) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return serviceRequest.sendPostJSON(apiURL, jsonObj);
+    }
+    
+    protected String sendGet(String url) throws UnrecoverableKeyException, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return serviceRequest.sendGet(url == null || "".equals(url) ? apiURL : url);
     }
 
     /**

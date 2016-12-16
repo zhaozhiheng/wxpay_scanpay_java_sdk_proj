@@ -30,19 +30,19 @@ public class UnifiedOrderBusiness {
 
     public interface ResultListener {
 
-        //API返回ReturnCode不合法，支付请求逻辑错误，请仔细检测传过去的每一个参数是否合法，或是看API能否被正常访问
+        //API返回ReturnCode不合法，统一下单请求逻辑错误，请仔细检测传过去的每一个参数是否合法，或是看API能否被正常访问
         void onFailByReturnCodeError(UnifiedOrderResData unifiedOrderResData);
 
-        //API返回ReturnCode为FAIL，支付API系统返回失败，请检测Post给API的数据是否规范合法
+        //API返回ReturnCode为FAIL，统一下单API系统返回失败，请检测Post给API的数据是否规范合法
         void onFailByReturnCodeFail(UnifiedOrderResData unifiedOrderResData);
 
         //撤销请求API返回的数据签名验证失败，有可能数据被篡改了
         void onFailBySignInvalid(UnifiedOrderResData unifiedOrderResData);
 
-        //支付失败
+        //统一下单失败
         void onFail(UnifiedOrderResData unifiedOrderResData);
 
-        //支付成功
+        //统一下单成功
         void onSuccess(UnifiedOrderResData unifiedOrderResData);
 
     }
@@ -51,26 +51,23 @@ public class UnifiedOrderBusiness {
      * 直接执行统一下单业务逻辑 
      *
      * @param scanPayReqData 这个数据对象里面包含了API要求提交的各种数据字段
-     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
+     * @param resultListener 商户需要自己监听统一下单业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws Exception
      */
 	public void run(UnifiedOrderReqData unifiedOrderReqData, ResultListener resultListener, String certLocalPath,String certPassword) throws Exception {
 
         //--------------------------------------------------------------------
-        //构造请求“被扫支付API”所需要提交的数据
+        //构造请求“统一下单API”所需要提交的数据
         //--------------------------------------------------------------------
  
-
         long costTimeStart = System.currentTimeMillis();
 
-        log.i("支付API返回的数据如下：");
+        log.i("统一下单API返回的数据如下：");
         unifiedOrder(unifiedOrderReqData,resultListener);
 
         long costTimeEnd = System.currentTimeMillis();
         long totalTimeCost = costTimeEnd - costTimeStart;
         log.i("api请求总耗时：" + totalTimeCost + "ms");
-
- 
  
     }
 	/**
@@ -108,7 +105,7 @@ public class UnifiedOrderBusiness {
         } else {
 
             if (!Signature.checkIsSignValidFromResponseString(responseString,key)) {
-                log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
+                log.e("【统一下单失败】统一下单请求API返回的数据签名验证失败，有可能数据被篡改了");
                 resultListener.onFailBySignInvalid(unifiedOrderResData);
                 return false;
             }

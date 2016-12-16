@@ -11,7 +11,8 @@ import com.tencent.common.Signature;
 /**
  * 公众号支付 JS API 请求参数类
  * 
- * @author 孟郑宏
+ * @since 2016/12/13
+ * @author mengzh
  */
 public class JSPayReqData {
 

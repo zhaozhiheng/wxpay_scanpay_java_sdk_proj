@@ -16,6 +16,7 @@ import javax.net.ssl.SSLContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
@@ -27,6 +28,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.tencent.service.IServiceRequest;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.DomDriver;
@@ -40,7 +42,6 @@ import com.thoughtworks.xstream.io.xml.XmlFriendlyNameCoder;
 public class HttpsRequest implements IServiceRequest{
 
     public interface ResultListener {
-
 
         public void onConnectionPoolTimeoutError();
 
@@ -154,7 +155,6 @@ public class HttpsRequest implements IServiceRequest{
      * @throws NoSuchAlgorithmException
      * @throws KeyManagementException
      */
-
     public String sendPost(String url, Object xmlObj) throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
 
         String result = null;
@@ -211,6 +211,94 @@ public class HttpsRequest implements IServiceRequest{
 
         return result;
     }
+    
+    @Override
+    public String sendPostJSON(String apiURL, Object jsonObj)
+        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        String result = null;
+        
+        if (!hasInit) {
+            //          init();
+            log.e("请调用新版HttpsRequest初始化函数");
+            return result;
+        }
+
+        HttpPost httpPost = new HttpPost(apiURL);
+
+        //将要提交给API的数据对象转换成JSON格式数据Post给API
+        String postDataJSON = JSON.toJSONString(jsonObj);
+
+        Util.log("API，POST过去的数据是：");
+        Util.log(postDataJSON);
+
+        //得指明使用UTF-8编码，否则到API服务器JSON的中文不能被成功识别
+        StringEntity postEntity = new StringEntity(postDataJSON, "UTF-8");
+        httpPost.addHeader("Content-Type", "application/json");
+        httpPost.setEntity(postEntity);
+
+        //设置请求器的配置
+        httpPost.setConfig(requestConfig);
+
+        Util.log("executing request" + httpPost.getRequestLine());
+
+        try {
+            HttpResponse response = httpClient.execute(httpPost);
+
+            HttpEntity entity = response.getEntity();
+
+            result = EntityUtils.toString(entity, "UTF-8");
+
+        } catch (ConnectionPoolTimeoutException e) {
+            log.e("http get throw ConnectionPoolTimeoutException(wait time out)");
+
+        } catch (ConnectTimeoutException e) {
+            log.e("http get throw ConnectTimeoutException");
+
+        } catch (SocketTimeoutException e) {
+            log.e("http get throw SocketTimeoutException");
+
+        } catch (Exception e) {
+            log.e("http get throw Exception");
+
+        } finally {
+            httpPost.abort();
+        }
+
+        return result;
+    }
+    
+    @Override
+    public String sendGet(String api_url)
+        throws UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
+        String result = null;
+        
+        HttpGet httpGet = new HttpGet(api_url);
+        
+        //设置请求器的配置
+        httpGet.setConfig(requestConfig);
+        Util.log("executing request" + httpGet.getRequestLine());
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            
+            result = EntityUtils.toString(response.getEntity(), "UTF-8");
+        } catch (ConnectionPoolTimeoutException e) {
+            log.e("http get throw ConnectionPoolTimeoutException(wait time out)");
+
+        } catch (ConnectTimeoutException e) {
+            log.e("http get throw ConnectTimeoutException");
+
+        } catch (SocketTimeoutException e) {
+            log.e("http get throw SocketTimeoutException");
+
+        } catch (Exception e) {
+            log.e("http get throw Exception");
+
+        } finally {
+            httpGet.abort();
+        }
+
+        return result;
+    }
 
     /**
      * 设置连接超时时间
@@ -218,7 +306,7 @@ public class HttpsRequest implements IServiceRequest{
      * @param socketTimeout 连接时长，默认10秒
      */
     public void setSocketTimeout(int socketTimeout) {
-        socketTimeout = socketTimeout;
+        this.socketTimeout = socketTimeout;
         resetRequestConfig();
     }
 
@@ -228,7 +316,7 @@ public class HttpsRequest implements IServiceRequest{
      * @param connectTimeout 传输时长，默认30秒
      */
     public void setConnectTimeout(int connectTimeout) {
-        connectTimeout = connectTimeout;
+        this.connectTimeout = connectTimeout;
         resetRequestConfig();
     }
 
@@ -242,6 +330,7 @@ public class HttpsRequest implements IServiceRequest{
      * @param requestConfig 设置HttpsRequest的请求器配置
      */
     public void setRequestConfig(RequestConfig requestConfig) {
-        requestConfig = requestConfig;
+        this.requestConfig = requestConfig;
     }
+
 }
