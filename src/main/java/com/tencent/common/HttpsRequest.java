@@ -208,7 +208,7 @@ public class HttpsRequest implements IServiceRequest{
         } finally {
             httpPost.abort();
         }
-
+        
         return result;
     }
     
@@ -263,7 +263,7 @@ public class HttpsRequest implements IServiceRequest{
         } finally {
             httpPost.abort();
         }
-
+        Util.log("http post json result : " + result);
         return result;
     }
     
@@ -296,7 +296,7 @@ public class HttpsRequest implements IServiceRequest{
         } finally {
             httpGet.abort();
         }
-
+        Util.log("http get result : " + result);
         return result;
     }
 
