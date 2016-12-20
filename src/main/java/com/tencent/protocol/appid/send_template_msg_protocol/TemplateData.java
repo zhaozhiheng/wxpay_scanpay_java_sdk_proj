@@ -1,4 +1,4 @@
-package com.tencent.protocol.send_template_msg_protocol;
+package com.tencent.protocol.appid.send_template_msg_protocol;
 
 /**
  * 模版数据

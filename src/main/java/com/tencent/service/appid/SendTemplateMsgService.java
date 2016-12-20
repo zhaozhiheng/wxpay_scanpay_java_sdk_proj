@@ -1,4 +1,4 @@
-package com.tencent.service;
+package com.tencent.service.appid;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -7,7 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
 import com.tencent.common.Configure;
-import com.tencent.protocol.send_template_msg_protocol.SendTemplateMsgReqData;
+import com.tencent.protocol.appid.send_template_msg_protocol.SendTemplateMsgReqData;
+import com.tencent.service.BaseService;
 
 /**
  * 发送模版消息服务类
@@ -19,7 +20,7 @@ public class SendTemplateMsgService extends BaseService {
 
     public SendTemplateMsgService(String certLocalPath, String certPassword)
         throws IllegalAccessException, InstantiationException, ClassNotFoundException, UnrecoverableKeyException, KeyManagementException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        super(Configure.SEND_TEMPLATE_MESSAGE, certLocalPath, certPassword);
+        super(Configure.TEMPLATE_SEND_MESSAGE, certLocalPath, certPassword);
     }
 
     /**

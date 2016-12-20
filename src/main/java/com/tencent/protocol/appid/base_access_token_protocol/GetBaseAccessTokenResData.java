@@ -1,4 +1,4 @@
-package com.tencent.protocol.base_access_token_protocol;
+package com.tencent.protocol.appid.base_access_token_protocol;
 
 /**
  * 获取/刷新基础支持的AccessToken API 结果包
