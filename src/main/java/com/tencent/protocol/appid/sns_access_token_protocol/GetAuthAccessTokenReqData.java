@@ -70,4 +70,9 @@ public class GetAuthAccessTokenReqData {
         this.refresh_token = refresh_token;
     }
 
+    @Override
+    public String toString() {
+        return "GetAuthAccessTokenReqData [grant_type=" + grant_type + ", appid=" + appid + ", code=" + code + ", refresh_token=" + refresh_token + "]";
+    }
+
 }
