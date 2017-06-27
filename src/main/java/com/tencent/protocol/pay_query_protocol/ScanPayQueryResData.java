@@ -23,6 +23,7 @@ public class ScanPayQueryResData {
 
     //以下字段在return_code 和result_code 都为SUCCESS 的时候有返回
     private String trade_state = "";
+    private String trade_state_desc="";
 
     //trade_state的几种可能取值：
     //    SUCCESS--支付成功
@@ -254,4 +255,13 @@ public class ScanPayQueryResData {
     public void setCash_fee_type(String cash_fee_type) {
         this.cash_fee_type = cash_fee_type;
     }
+    
+    public String getTrade_state_desc() {
+        return trade_state_desc;
+    }
+    
+    public void setTrade_state_desc(String trade_state_desc) {
+        this.trade_state_desc = trade_state_desc;
+    }
+    
 }

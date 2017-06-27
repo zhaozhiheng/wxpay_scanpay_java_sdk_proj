@@ -260,7 +260,7 @@ public class WXPay {
     }
     
     /**
-     * 请求获取/刷新基础支持的AccessToken
+     * 发送模版消息
      * @param getBaseAccessTokenReqData 这个数据对象里面包含了API要求提交的各种数据字段
      * @param certLocalPath 服务商证书路径
      * @param certPassword 服务商证书密码 

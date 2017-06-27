@@ -194,21 +194,21 @@ public class HttpsRequest implements IServiceRequest{
             result = EntityUtils.toString(entity, "UTF-8");
 
         } catch (ConnectionPoolTimeoutException e) {
-            log.e("http get throw ConnectionPoolTimeoutException(wait time out)");
-
+            log.e("http post throw ConnectionPoolTimeoutException(wait time out)");
+            throw e;
         } catch (ConnectTimeoutException e) {
-            log.e("http get throw ConnectTimeoutException");
-
+            log.e("http post throw ConnectTimeoutException");
+            throw e;
         } catch (SocketTimeoutException e) {
-            log.e("http get throw SocketTimeoutException");
-
+            log.e("http post throw SocketTimeoutException");
+            throw e;
         } catch (Exception e) {
-            log.e("http get throw Exception");
-
+            log.e("http post throw Exception：" + e.getMessage());
+            throw e;
         } finally {
             httpPost.abort();
         }
-        
+        Util.log("http post json result : " + result);
         return result;
     }
     
@@ -249,17 +249,17 @@ public class HttpsRequest implements IServiceRequest{
             result = EntityUtils.toString(entity, "UTF-8");
 
         } catch (ConnectionPoolTimeoutException e) {
-            log.e("http get throw ConnectionPoolTimeoutException(wait time out)");
-
+            log.e("http post throw ConnectionPoolTimeoutException(wait time out)");
+            throw e;
         } catch (ConnectTimeoutException e) {
-            log.e("http get throw ConnectTimeoutException");
-
+            log.e("http post throw ConnectTimeoutException");
+            throw e;
         } catch (SocketTimeoutException e) {
-            log.e("http get throw SocketTimeoutException");
-
+            log.e("http post throw SocketTimeoutException");
+            throw e;
         } catch (Exception e) {
-            log.e("http get throw Exception");
-
+            log.e("http post throw Exception：" + e.getMessage());
+            throw e;
         } finally {
             httpPost.abort();
         }
@@ -283,16 +283,16 @@ public class HttpsRequest implements IServiceRequest{
             result = EntityUtils.toString(response.getEntity(), "UTF-8");
         } catch (ConnectionPoolTimeoutException e) {
             log.e("http get throw ConnectionPoolTimeoutException(wait time out)");
-
+            throw e;
         } catch (ConnectTimeoutException e) {
             log.e("http get throw ConnectTimeoutException");
-
+            throw e;
         } catch (SocketTimeoutException e) {
             log.e("http get throw SocketTimeoutException");
-
+            throw e;
         } catch (Exception e) {
-            log.e("http get throw Exception");
-
+            log.e("http get throw Exception：" + e.getMessage());
+            throw e;
         } finally {
             httpGet.abort();
         }
