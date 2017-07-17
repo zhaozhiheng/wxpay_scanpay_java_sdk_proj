@@ -78,7 +78,7 @@ public class HttpsRequest implements IServiceRequest{
 //        init();
 //    }
     
-    // 为适应多服务商修改，牺牲了程序的灵活性
+    // 为适应多服务商修改，牺牲了程序的灵活性 
     private void init(String certLocalPath,String certPassword) throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
 
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
