@@ -17,12 +17,14 @@ public class DownloadBillReqData {
     //每个字段具体的意思请查看API文档
     private String appid = "";
     private String mch_id = "";
+    private String sub_appid = "";
     private String sub_mch_id = "";
     private String device_info = "";
     private String nonce_str = "";
     private String sign = "";
     private String bill_date = "";
     private String bill_type = "";
+    private String tar_type = "";
     private String sdk_version = "";
 
     /**
@@ -35,7 +37,7 @@ public class DownloadBillReqData {
     REFUND，返回当日退款订单
     REVOKED，已撤销的订单
      */
-    public DownloadBillReqData(String deviceInfo,String billDate,String billType,String keyPartner,String appId,String mchId,String subMchId){
+    public DownloadBillReqData(String deviceInfo,String billDate,String billType,String keyPartner,String appId,String mchId,String subMchId,String subAppid,String tarType){
 
         setSdk_version(Configure.getSdkVersion());
 
@@ -53,7 +55,10 @@ public class DownloadBillReqData {
         setBill_date(billDate);
 
         setBill_type(billType);
+        
+        setSub_appid(subAppid);
 
+        setTar_type(tarType);
 
         //随机字符串，不长于32 位
         setNonce_str(RandomStringGenerator.getRandomStringByLength(32));
@@ -121,7 +126,23 @@ public class DownloadBillReqData {
         this.bill_type = bill_type;
     }
 
-    public String getSdk_version(){
+    public String getSub_appid() {
+		return sub_appid;
+	}
+
+	public void setSub_appid(String sub_appid) {
+		this.sub_appid = sub_appid;
+	}
+
+	public String getTar_type() {
+		return tar_type;
+	}
+
+	public void setTar_type(String tar_type) {
+		this.tar_type = tar_type;
+	}
+
+	public String getSdk_version(){
         return sdk_version;
     }
 

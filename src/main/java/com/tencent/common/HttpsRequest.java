@@ -1,8 +1,10 @@
 package com.tencent.common;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -10,18 +12,22 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -72,7 +78,7 @@ public class HttpsRequest implements IServiceRequest{
 //        init();
 //    }
     
-    // 为适应多服务商修改，牺牲了程序的灵活性
+    // 为适应多服务商修改，牺牲了程序的灵活性 
     private void init(String certLocalPath,String certPassword) throws IOException, KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyManagementException {
 
         KeyStore keyStore = KeyStore.getInstance("PKCS12");
@@ -190,8 +196,16 @@ public class HttpsRequest implements IServiceRequest{
             HttpResponse response = httpClient.execute(httpPost);
 
             HttpEntity entity = response.getEntity();
+            Header header = entity.getContentType();
+            if(header != null && header.getValue().indexOf("gzip")!=-1){
+            	InputStream in = entity.getContent();
+            	result = unZip(in, "UTF-8");
+//            	result = EntityUtils.toString(new GzipDecompressingEntity(entity), "UTF-8");
+            } else {
+            	result = EntityUtils.toString(entity, "UTF-8");
+            }
 
-            result = EntityUtils.toString(entity, "UTF-8");
+            
 
         } catch (ConnectionPoolTimeoutException e) {
             log.e("http post throw ConnectionPoolTimeoutException(wait time out)");
@@ -332,5 +346,33 @@ public class HttpsRequest implements IServiceRequest{
     public void setRequestConfig(RequestConfig requestConfig) {
         this.requestConfig = requestConfig;
     }
-
+    /**
+     * 解压服务器返回的gzip流
+     * @param in 抓取返回的InputStream流
+     * @param charSet 编码
+     * @return String格式
+     * @throws IOException
+     */
+    private String unZip(InputStream in, String charSet) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        GZIPInputStream gis = null;
+        try {
+            gis = new GZIPInputStream(in);
+            byte[] _byte = new byte[1024];
+            int len = 0;
+            while ((len = gis.read(_byte)) != -1) {
+                baos.write(_byte, 0, len);
+            }
+            String unzipString = new String(baos.toByteArray(), charSet);
+            return unzipString;
+        } finally {
+            if (gis != null) {
+                gis.close();
+            }
+            if(baos != null){
+                baos.close();
+            }
+        }
+    }
+    
 }
