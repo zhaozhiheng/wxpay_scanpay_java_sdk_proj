@@ -227,10 +227,11 @@ public class ScanPayBusiness {
                         log.i("【需要用户输入密码、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
-                        log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
+                        //log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
                         //doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
                         //resultListener.onFail(scanPayResData);
-                        resultListener.onFail(scanPayResData);
+                        log.w("【需要用户输入密码、在一定时间内没有查询到支付成功、结束查询，返回用户支付中】");
+                        resultListener.onUserPaying(scanPayResData);
                     }
                 } else {
                     //--------------------------------------------------------------------
