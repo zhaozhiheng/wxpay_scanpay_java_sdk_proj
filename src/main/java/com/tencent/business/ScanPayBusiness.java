@@ -77,6 +77,9 @@ public class ScanPayBusiness {
 
         //支付成功
         void onSuccess(ScanPayResData scanPayResData,String transactionID);
+        
+        // 用户支付中
+        void onUserPaying(ScanPayResData scanPayResData);
 
     }
 
@@ -85,10 +88,10 @@ public class ScanPayBusiness {
 
     //每次调用订单查询API时的等待时间，因为当出现支付失败的时候，如果马上发起查询不一定就能查到结果，所以这里建议先等待一定时间再发起查询
 
-    private int waitingTimeBeforePayQueryServiceInvoked = 5000;
+    private int waitingTimeBeforePayQueryServiceInvoked = 10000;
 
     //循环调用订单查询API的次数
-    private int payQueryLoopInvokedCount = 3;
+    private int payQueryLoopInvokedCount = 5;
 
     //每次调用撤销API的等待时间
     private int waitingTimeBeforeReverseServiceInvoked = 5000;
@@ -198,7 +201,7 @@ public class ScanPayBusiness {
                     //--------------------------------------------------------------------
 
                     //对于扣款明确失败的情况直接走撤销逻辑
-                    doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
+                    //doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
 
                     //以下几种情况建议明确提示用户，指导接下来的工作
                     if (errorCode.equals("AUTHCODEEXPIRE")) {
@@ -224,9 +227,11 @@ public class ScanPayBusiness {
                         log.i("【需要用户输入密码、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
-                        log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
-                        resultListener.onFail(scanPayResData);
+                        //log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
+                        //doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
+                        //resultListener.onFail(scanPayResData);
+                        log.w("【需要用户输入密码、在一定时间内没有查询到支付成功、结束查询，返回用户支付中】");
+                        resultListener.onUserPaying(scanPayResData);
                     }
                 } else {
                     //--------------------------------------------------------------------
@@ -237,7 +242,7 @@ public class ScanPayBusiness {
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
                         log.i("【支付扣款未知失败、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
+                        //doReverseLoop(outTradeNo,resultListener,appId,mchId,subMchId);
                         resultListener.onFail(scanPayResData);
                     }
                 }
